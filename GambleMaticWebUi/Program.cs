@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GambleMaticWebUi.Components;
 using GambleMaticWebUi.Components.Account;
 using GambleMaticWebUi.Data;
+using GambleMaticCommLib;
 
 namespace GambleMaticWebUi;
 
@@ -40,6 +41,10 @@ public class Program
             .AddDefaultTokenProviders();
 
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+        builder.Services.AddHttpClient("GamblematicApiHttpClient");
+
+        builder.Services.AddScoped<ApiCommunicatorService>();
 
         var app = builder.Build();
 

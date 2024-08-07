@@ -1,5 +1,10 @@
 ﻿@page "/weather"
+@using GambleMaticCommLib.DataModels
+@using GambleMaticWebUi.Data.ViewModels
+@inject ApiCommunicatorService ApiCommunicatorService
+@rendermode InteractiveServer
 @attribute [StreamRendering]
+
 
 <PageTitle>Weather</PageTitle>
 
@@ -10,6 +15,10 @@
 @if (forecasts == null)
 {
     <p><em>Loading...</em></p>
+}
+else if (_errorMessage != null)
+{
+    <p> @_errorMessage</p>
 }
 else
 {
@@ -34,31 +43,47 @@ else
             }
         </tbody>
     </table>
+    
+    <button class="btn btn-primary" @onclick="RefreshWeatherForecasts">Refresh forecast</button>
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private WeatherForecastViewModel[]? forecasts;
+    private ApiResult<WeatherForecastDto> forecastResults = null;
+    private MarkupString? _errorMessage = null;
+
+
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
-        await Task.Delay(500);
-
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+         await RefreshWeatherForecasts();
     }
 
-    private class WeatherForecast
+    private async Task RefreshWeatherForecasts()
     {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        
+        forecastResults = await ApiCommunicatorService.WeatherForecastProvider.GetForecasts();
+
+        if (forecastResults.Failed)
+        {
+            _errorMessage = new MarkupString($"Error with getting weather forecsts.<br />Error: {forecastResults}");
+            return;
+        }
+        
+
+        //Initialize the forecasts array with size 0
+        forecasts = Array.Empty<WeatherForecastViewModel>();
+        List<WeatherForecastViewModel> forecastsList = new List<WeatherForecastViewModel>();
+        foreach (var dto in forecastResults.Payload)
+        {
+            WeatherForecastViewModel forecast = new WeatherForecastViewModel(dto);
+            forecastsList.Add(forecast);
+        }
+
+        forecasts = forecastsList.ToArray();
+    
     }
+
+
+
 }
