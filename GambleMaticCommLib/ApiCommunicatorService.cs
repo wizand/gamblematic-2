@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using System.Text.Json;
 using System.Web;
 
 using GambleMaticCommLib.DataModels;
@@ -25,6 +26,37 @@ public class ApiCommunicatorService
         return "asd-asd-asd";
     }
 
+    public async Task<ApiResult<T>> Get<T>(string url)
+    {
+        var token = await GetToken();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("Authorization", $"Bearer {token}");
+
+        var response = await HttpClient.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonSerializer.Deserialize<T[]>(content);
+            ApiResult<T> apiResult = new(payload: result, success: true, error: null);
+            return apiResult;
+        }
+        else
+        {
+            return new ApiResult<T>
+            (
+                payload: null,
+                success: false,
+                error: new ApiError()
+                {
+                    Message = response.ReasonPhrase ?? response.StatusCode.ToString()
+                }
+            );
+        }
+    }
+
+
     public WeatherForecastProvider WeatherForecastProvider { get; set; }
 }
 
@@ -44,6 +76,12 @@ public class WeatherForecastProvider
 
     public async Task<ApiResult<WeatherForecastDto>> GetForecasts()
     {
+
+        var token = await _apiCommunicatorService.GetToken();
+
+
+
+
 
         await Task.Delay(Random.Shared.Next(0,500));
         WeatherForecastDto[] forecasts;
