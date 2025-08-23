@@ -1,4 +1,6 @@
-﻿using GambleMaticCommLib;
+﻿using GambleMaticApi.DatabaseEntities;
+
+using GambleMaticCommLib;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,7 +36,9 @@ namespace GambleMaticApi
 
 
             //TODO: Add authorization to this endpoint
-            authEndpointGroup.MapPost("/updateUserInformation", async Task<ApiResult<string>> ([FromBody] ModifyUserDataDto modifyUserData) =>
+            authEndpointGroup.MapPost("/updateUserInformation", async Task<ApiResult<string>> (
+                [FromBody] ModifyUserDataDto modifyUserData,
+                [FromServices] DatabaseManager _dbManager) =>
             {
                 ApiResult<string> response = new ApiResult<string>();
                 //TODO: implement, this is just for demo purposes
@@ -45,6 +49,7 @@ namespace GambleMaticApi
                     RealName = modifyUserData.RealName,
                     IsAdmin = modifyUserData.IsAdmin
                 };
+
 
                 //TODO: update user in database
                 response.Payload = "User information updated successfully";

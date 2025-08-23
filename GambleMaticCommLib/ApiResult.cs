@@ -16,7 +16,7 @@ namespace GambleMaticCommLib
         }
 
         public bool Success { get => Error == null; }
-        public bool Failed { get => !Success }
+        public bool Failed { get => !Success; }
         public ApiError? Error { get; set; } = null;
         public T? Payload { get; set; } = default;
         private string? _message = null;
