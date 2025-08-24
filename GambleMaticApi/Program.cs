@@ -1,5 +1,8 @@
 using GambleMaticApi;
 
+using GambleMaticCommLib;
+
+using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -10,26 +13,29 @@ if (string.IsNullOrEmpty(databaseConnectionString))
 }
 builder.Services.AddScoped<DatabaseManager>(_ => new DatabaseManager(databaseConnectionString));
 
+builder.Services.AddGambleMaticCommunicationLibrary();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
+
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    
 }
 
+app.MapOpenApi();
+app.MapScalarApiReference(options => 
+{ 
+    options.Title = "Gamblematic V2 API"; 
+    options.Theme = ScalarTheme.DeepSpace; 
+});
 app.UseHttpsRedirection();
 
 
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -1,28 +1,25 @@
-﻿using System.Net.Http;
-using System.Text.Json;
-using System.Web;
-
-using GambleMaticCommLib.DataModels;
+﻿using System.Text.Json;
 
 namespace GambleMaticCommLib;
 
 public class ApiCommunicatorService
 {
-
+    private readonly JwtHelper _tokenHolder;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient? _httpClient = null;
     private HttpClient HttpClient => _httpClient ?? _httpClientFactory.CreateClient("GamblematicApiHttpClient");
 
 
-    public ApiCommunicatorService(IHttpClientFactory httpClientFactory)
+    public ApiCommunicatorService(IHttpClientFactory httpClientFactory, JwtHelper tokenHolder)
     {
+        _tokenHolder = tokenHolder;
         _httpClientFactory = httpClientFactory;
     }
 
 
     public async Task<string> GetToken()
     {
-        return "asd-asd-asd";
+        return await _tokenHolder.GetTokenString();
     }
 
     public async Task<ApiResult<T>> Get<T>(string url)
@@ -37,20 +34,15 @@ public class ApiCommunicatorService
         {
             var content = await response.Content.ReadAsStringAsync();
 
-            var result = JsonSerializer.Deserialize<T[]>(content);
-            ApiResult<T> apiResult = new(payload: result, success: true, error: null);
+            var result = JsonSerializer.Deserialize<T>(content);
+            ApiResult<T> apiResult = new ApiResult<T>(payload: result, error: null);
             return apiResult;
         }
         else
         {
             return new ApiResult<T>
             (
-                payload: null,
-                success: false,
-                error: new ApiError()
-                {
-                    ErrorMessage = response.ReasonPhrase ?? response.StatusCode.ToString()
-                }
+                error: new ApiError(errorMessage: response.ReasonPhrase ?? response.StatusCode.ToString())
             );
         }
     }
