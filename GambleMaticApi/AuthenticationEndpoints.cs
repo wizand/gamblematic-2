@@ -16,15 +16,14 @@ namespace GambleMaticApi
 
             var authEndpointGroup = endpoints.MapGroup("/api/v1/auth").WithTags("Authentication");
 
-            authEndpointGroup.MapPost("/login", async Task<ApiResult<string>> ([FromBody]LoginRequestDto loginRequest) =>
+            authEndpointGroup.MapPost("/login", async Task<ApiResult<string>> ([FromServices] JwtHelper jwtHelper, [FromBody]LoginRequestDto loginRequest) =>
                 {
                     ApiResult<string> response = new();
                     //TODO: implement, this is just for demo purposes
                     if (loginRequest.Username == "test" && loginRequest.Password == "password")
                     {
 
-                        var jwtManager = new JwtManager();
-                        response.Payload = jwtManager.GetJwt();
+                        response.Payload = await jwtHelper.GetTokenString();
                         response.Message = "Login successful";
                         return response;
                     }
